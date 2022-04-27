@@ -6,6 +6,9 @@ $nl = [Environment]::NewLine
 $cont="";
 $outPutPath="C:\DownloadBadgesImages\"
 
+if (!(test-path -path $outPutPath)) {new-item -path $outPutPath -itemtype directory}
+if (!(test-path -path $outPutPath\img)) {new-item -path $outPutPath\img -itemtype directory}
+
 Foreach ($i in $data)
 {
     #save images locally if you
@@ -15,4 +18,5 @@ Foreach ($i in $data)
     $aa="<a href='https://www.credly.com/badges/$($i.id)' title='$($i.badge_template.name)'><img src='$($i.badge_template.image_url)' width='140' alt='$($i.badge_template.name),$($i.badge_template.description)'/></a>"
     $cont+=$aa+$nl
 }
+
 $cont|Out-File -FilePath "$($outPutPath)creadexport_local.html"
