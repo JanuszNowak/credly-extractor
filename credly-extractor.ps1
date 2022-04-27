@@ -1,36 +1,18 @@
-$u="https://www.credly.com/users/janusz-nowak/badges"
+$response=Invoke-RestMethod -Uri "https://www.credly.com/users/janusz-nowak/badges.json"
+$response.metadata
+$data=$response.data|Sort-Object -Property issued_at_date -Descending
+$nl = [Environment]::NewLine
 
- 
-$res=Invoke-WebRequest -Uri $u
+$cont="";
+$outPutPath="C:\DownloadBadgesImages\"
 
-$Pre = $res.AllElements | Where {$_.TagName -eq "li"} | where  {$_.Class -eq "data-table-row data-table-row-grid"} 
-
-
-$template = @'
-<a href="https://www.credly.com${badge}" title="${title}">
-    <img src="${img}" width="140" alt="${title}"/>
-</a>
-'@
-
-ForEach($p in $Pre)
+Foreach ($i in $data)
 {
-    $pp=$p.innerHTML.Replace("<DIV class=cr-standard-grid-item-content__title>","").Replace("<DIV class=cr-standard-grid-item-content__details>","").Replace("<DIV class=cr-standard-grid-item-content__subtitle>","").Replace(" </DIV></DIV></DIV></A></DIV>","").Replace(" </DIV>","").Replace("cr-standard-grid-item-content c-badge c-badge--medium","").Replace("col-12 col data-table-content","").Replace("c-grid-item c-grid-item--stack-lt-sm cr-public-earned-badge-grid-item","")
-    $pp=$pp.Replace("><IMG class=cr-standard-grid-item-content__image alt=","").Replace("<DIV class=","").Replace("><A title=","").Replace('""','').Replace("&amp;","&").Replace('">',"").Replace(" class= ","").Replace(' src=',"").Replace("`n","").Replace(" `r`n","")#.Replace('"href="',
+    #save images locally if you
+    Invoke-WebRequest $i.image_url -OutFile "$outPutPath\img\$($i.badge_template.name.Replace(":"," ")).png"
 
-    $pp=$pp.Trim()
-    #$pp
-    $split=$pp.Split([Environment]::NewLine)
-
-    #$split#[0]
-    $badge=$split[0].Replace('"href="',"|").Replace('"','').Replace($split[3],"").Replace('|','')
-    #$badge
-    $img=$split[1].Replace('"','').Trim().Replace("110x110","140x140")
-    #$img
-    $title=$split[3]
-    #$title
-    $company= $split[4]
-    #$company
-
-    $expanded = $ExecutionContext.InvokeCommand.ExpandString($template)
-    $expanded
+    #output item html template
+    $aa="<a href='https://www.credly.com/badges/$($i.id)' title='$($i.badge_template.name)'><img src='$($i.badge_template.image_url)' width='140' alt='$($i.badge_template.name),$($i.badge_template.description)'/></a>"
+    $cont+=$aa+$nl
 }
+$cont|Out-File -FilePath "$($outPutPath)creadexport_local.html"
